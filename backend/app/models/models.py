@@ -226,6 +226,7 @@ class IrrigationZone(Base):
     auto_irrigation_enabled = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)
     notes = Column(Text, nullable=True)
+    pipe_network_json = Column(Text, nullable=True)
     current_pump_state = Column(String(20), default="OFF") # "OFF", "RUNNING"
     last_irrigated_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)

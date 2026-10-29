@@ -1,8 +1,11 @@
 import datetime
+import logging
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
+
+logger = logging.getLogger("smartirrigate.api.zones")
 
 from backend.app.core.database import get_db
 from backend.app.core.config import settings
@@ -15,9 +18,11 @@ from backend.app.schemas.schemas import (
     ZoneCreate, ZoneUpdate, ZoneResponse, ZoneDetailResponse,
     PlantCreate, PlantUpdate, PlantResponse, BulkLayoutUpdateRequest,
     ZonePlanCalculationResponse, ApplyZoneSettingsRequest,
-    SensorReadingResponse
+    SensorReadingResponse, GardenNetworkPayload, NetworkValidationResponse,
+    GardenIrrigationPlanResponse
 )
 from backend.app.services.state_manager import state_manager
+from backend.app.services.garden_network_service import garden_network_service
 
 router = APIRouter(prefix="/zones", tags=["Irrigation Zones & Plant Planning"])
 
@@ -643,4 +648,111 @@ def apply_zone_plan(
         "soil_moisture_target": zone.soil_moisture_target,
         "soil_moisture_dry_threshold": zone.soil_moisture_dry_threshold
     }
+
+
+# =============================================================================
+# GARDEN PIPE & MOTOR DESIGNER ENDPOINTS
+# =============================================================================
+
+@router.get("/{zone_id}/network")
+def get_garden_network(zone_id: str, db: Session = Depends(get_db)):
+    """
+    Returns the persistent garden pipe network for the zone, or a synthesized default network.
+    """
+    import json
+    zone = db.query(IrrigationZone).filter(IrrigationZone.zone_id == zone_id).first()
+    if not zone:
+        raise HTTPException(status_code=404, detail=f"Zone '{zone_id}' not found.")
+
+    plants = zone.plants or []
+
+    if zone.pipe_network_json:
+        try:
+            network_data = json.loads(zone.pipe_network_json)
+            validation = garden_network_service.validate_network(network_data, plants)
+            return {
+                "zone_id": zone_id,
+                "network": network_data,
+                "validation": validation
+            }
+        except Exception as e:
+            logger.warning(f"Failed to parse stored pipe network JSON for zone {zone_id}: {e}")
+
+    # Generate starter default network
+    default_net = garden_network_service.get_default_network(zone_id, plants)
+    validation = garden_network_service.validate_network(default_net, plants)
+    return {
+        "zone_id": zone_id,
+        "network": default_net,
+        "validation": validation
+    }
+
+
+@router.put("/{zone_id}/network")
+def save_garden_network(
+    zone_id: str,
+    payload: GardenNetworkPayload,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Persists updated pipe network components, pipes, and properties to database.
+    Re-runs graph validation and returns updated network topology results.
+    """
+    import json
+    zone = db.query(IrrigationZone).filter(IrrigationZone.zone_id == zone_id).first()
+    if not zone:
+        raise HTTPException(status_code=404, detail=f"Zone '{zone_id}' not found.")
+
+    plants = zone.plants or []
+    net_dict = payload.model_dump()
+    validation = garden_network_service.validate_network(net_dict, plants)
+
+    zone.pipe_network_json = json.dumps(net_dict)
+    zone.updated_at = datetime.datetime.now(datetime.timezone.utc)
+    db.commit()
+
+    return {
+        "status": "SUCCESS",
+        "message": f"Garden pipe network saved successfully for '{zone.name}'.",
+        "network": net_dict,
+        "validation": validation
+    }
+
+
+@router.post("/{zone_id}/network/validate", response_model=NetworkValidationResponse)
+def validate_garden_network(
+    zone_id: str,
+    payload: GardenNetworkPayload,
+    db: Session = Depends(get_db)
+):
+    """
+    Validates graph connectivity: Water Source -> Pump -> Pipes -> Plant Zones.
+    Detects broken routes, closed valves, and unreachable beds.
+    """
+    zone = db.query(IrrigationZone).filter(IrrigationZone.zone_id == zone_id).first()
+    if not zone:
+        raise HTTPException(status_code=404, detail=f"Zone '{zone_id}' not found.")
+
+    plants = zone.plants or []
+    net_dict = payload.model_dump()
+    return garden_network_service.validate_network(net_dict, plants)
+
+
+@router.post("/{zone_id}/network/plan", response_model=GardenIrrigationPlanResponse)
+def generate_garden_irrigation_plan(
+    zone_id: str,
+    payload: GardenNetworkPayload,
+    db: Session = Depends(get_db)
+):
+    """
+    Generates a topology-aware sequential irrigation plan only for reachable zones.
+    """
+    zone = db.query(IrrigationZone).filter(IrrigationZone.zone_id == zone_id).first()
+    if not zone:
+        raise HTTPException(status_code=404, detail=f"Zone '{zone_id}' not found.")
+
+    net_dict = payload.model_dump()
+    return garden_network_service.generate_irrigation_plan(zone_id, net_dict, db)
+
 

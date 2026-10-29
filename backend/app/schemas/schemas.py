@@ -479,3 +479,74 @@ class AIChatResponse(BaseModel):
     proposed_action: Optional[Dict[str, Any]] = None
     created_at: str
 
+# ==================== GARDEN PIPE DESIGNER SCHEMAS ====================
+
+class GardenComponent(BaseModel):
+    id: str
+    type: str # "WATER_SOURCE", "MOTOR_PUMP", "JUNCTION", "VALVE", "DRIP_OUTLET", "PLANT_ZONE"
+    name: str
+    x: float
+    y: float
+    status: Optional[str] = "ACTIVE"
+    plant_id: Optional[int] = None
+    properties: Optional[Dict[str, Any]] = None
+
+class GardenPipe(BaseModel):
+    id: str
+    type: str # "MAIN", "BRANCH"
+    from_node_id: str
+    from_port: str
+    to_node_id: str
+    to_port: str
+    points: Optional[List[Dict[str, float]]] = None
+    status: Optional[str] = "CONNECTED"
+
+class GardenNetworkPayload(BaseModel):
+    components: List[GardenComponent]
+    pipes: List[GardenPipe]
+    metadata: Optional[Dict[str, Any]] = None
+
+class NetworkValidationIssue(BaseModel):
+    code: str
+    severity: str # "ERROR", "WARNING", "INFO"
+    message: str
+    component_id: Optional[str] = None
+
+class NetworkValidationResponse(BaseModel):
+    is_valid: bool
+    status: str # "VALID", "WARNING", "ERROR"
+    total_components: int
+    total_pipes: int
+    has_water_source: bool
+    has_motor_pump: bool
+    connected_plant_ids: List[str]
+    unreachable_plant_ids: List[str]
+    reachable_zones_count: int
+    total_zones_count: int
+    issues: List[NetworkValidationIssue]
+    summary: str
+
+class GardenIrrigationTask(BaseModel):
+    step: int
+    target_id: str
+    target_name: str
+    water_category: str
+    current_moisture: float
+    target_moisture: float
+    duration_seconds: int
+    priority: str # "HIGH", "MEDIUM", "LOW"
+    supply_path: List[str]
+    valve_states: Dict[str, str] = {}
+    explanation: str
+
+class GardenIrrigationPlanResponse(BaseModel):
+    zone_id: str
+    generated_at: str
+    total_tasks: int
+    total_water_liters_estimate: float
+    flow_rate_lpm: float
+    unreachable_warnings: List[str] = []
+    tasks: List[GardenIrrigationTask]
+    summary: str
+
+

@@ -22,14 +22,17 @@ import type {
   AIRecommendationResponse,
   WaterEfficiencyResponse,
   AIChatRequest,
-  AIChatResponse
+  AIChatResponse,
+  GardenNetworkPayload,
+  NetworkValidationResponse,
+  GardenIrrigationPlanResponse
 } from '../types';
 
-let rawBase = import.meta.env.VITE_API_URL || '';
+export let rawBase = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') ? 'https://greenishai.onrender.com' : '');
 if (rawBase.includes('greenishai-backend.onrender.com')) {
   rawBase = rawBase.replace('greenishai-backend.onrender.com', 'greenishai.onrender.com');
 }
-const API_BASE = rawBase ? `${rawBase.replace(/\/$/, '')}/api` : '/api';
+export const API_BASE = rawBase ? `${rawBase.replace(/\/$/, '')}/api` : '/api';
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem('smartirrigate_token');
@@ -49,6 +52,11 @@ async function handleResponse<T>(res: Response): Promise<T> {
 }
 
 export const api = {
+  async checkHealth(): Promise<{ status: string }> {
+    const res = await fetch(`${API_BASE}/health`);
+    return handleResponse<{ status: string }>(res);
+  },
+
   // Authentication
   async login(email: string, password: string): Promise<AuthResponse> {
     const res = await fetch(`${API_BASE}/auth/login`, {
@@ -664,5 +672,50 @@ export const api = {
       })
     });
     return handleResponse<AIChatResponse>(res);
+  },
+
+  // ==================== GARDEN PIPE & MOTOR DESIGNER ====================
+
+  async getGardenNetwork(zoneId: string): Promise<{ zone_id: string; network: GardenNetworkPayload; validation: NetworkValidationResponse }> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/network`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse(res);
+  },
+
+  async saveGardenNetwork(zoneId: string, payload: GardenNetworkPayload): Promise<{ status: string; message: string; network: GardenNetworkPayload; validation: NetworkValidationResponse }> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/network`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse(res);
+  },
+
+  async validateGardenNetwork(zoneId: string, payload: GardenNetworkPayload): Promise<NetworkValidationResponse> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/network/validate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse(res);
+  },
+
+  async generateGardenIrrigationPlan(zoneId: string, payload: GardenNetworkPayload): Promise<GardenIrrigationPlanResponse> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/network/plan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse(res);
   }
 };

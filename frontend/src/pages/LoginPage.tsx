@@ -18,6 +18,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +39,11 @@ export const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Silently ping backend on mount to warm up Render free tier container
+  useEffect(() => {
+    api.checkHealth().catch(() => {});
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -52,7 +58,12 @@ export const LoginPage: React.FC = () => {
       await login(email.trim(), password);
       navigate('/', { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please verify your credentials.');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('network') || msg.toLowerCase().includes('failed to fetch')) {
+        setError('Connecting to cloud server... The Render backend is currently waking up from sleep mode (takes ~30-45s on free tier). Please retry in a few moments.');
+      } else {
+        setError(msg || 'Authentication failed. Please verify your credentials.');
+      }
     } finally {
       setIsLoading(false);
     }

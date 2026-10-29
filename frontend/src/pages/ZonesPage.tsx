@@ -25,11 +25,13 @@ import {
   MapPin,
   FileText,
   Activity,
-  Sparkles
+  Sparkles,
+  GitBranch
 } from 'lucide-react';
 import { api } from '../services/api';
 import { IrrigationZone, ZoneDetail, SensorReading, IrrigationEvent, SystemMode } from '../types';
 import { PlantLayoutDesigner } from '../components/PlantLayoutDesigner';
+import { GardenPipeDesigner } from '../components/GardenPipeDesigner';
 import { AIForecastCard } from '../components/AIForecastCard';
 import { WaterEfficiencyCard } from '../components/WaterEfficiencyCard';
 import { AIAnomalyList } from '../components/AIAnomalyList';
@@ -47,7 +49,7 @@ export const ZonesPage: React.FC<ZonesPageProps> = ({ systemMode = 'SIMULATION' 
   const [loading, setLoading] = useState<boolean>(true);
   const [detailLoading, setDetailLoading] = useState<boolean>(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'PLANNER' | 'AI_INSIGHTS'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'PLANNER' | 'PIPE_DESIGNER' | 'AI_INSIGHTS'>('OVERVIEW');
 
   // Modal States
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
@@ -499,11 +501,11 @@ export const ZonesPage: React.FC<ZonesPageProps> = ({ systemMode = 'SIMULATION' 
                     <p className="text-xs text-[#778078] mt-1">{zoneDetail.description}</p>
                   </div>
 
-                  {/* Sub-menu Tabs: Overview vs Plant Layout Designer */}
-                  <div className="flex rounded-2xl bg-white border border-[#A9BBA0]/40 p-1 shadow-xs">
+                  {/* Sub-menu Tabs: Overview vs Plant Layout Designer vs Pipe Network vs AI Insights */}
+                  <div className="flex flex-wrap rounded-2xl bg-white border border-[#A9BBA0]/40 p-1 shadow-xs gap-1">
                     <button
                       onClick={() => setActiveTab('OVERVIEW')}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
                         activeTab === 'OVERVIEW' ? 'bg-[#244B36] text-white shadow-xs' : 'text-[#778078] hover:text-[#244B36]'
                       }`}
                     >
@@ -512,21 +514,30 @@ export const ZonesPage: React.FC<ZonesPageProps> = ({ systemMode = 'SIMULATION' 
                     </button>
                     <button
                       onClick={() => setActiveTab('PLANNER')}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
                         activeTab === 'PLANNER' ? 'bg-[#244B36] text-white shadow-xs' : 'text-[#778078] hover:text-[#244B36]'
                       }`}
                     >
                       <Sprout className="w-3.5 h-3.5" />
-                      <span>Plant Layout & Planning</span>
+                      <span>Plant Beds</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('PIPE_DESIGNER')}
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
+                        activeTab === 'PIPE_DESIGNER' ? 'bg-[#244B36] text-white shadow-xs' : 'text-[#778078] hover:text-[#244B36]'
+                      }`}
+                    >
+                      <GitBranch className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Pipe & Motor Network</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('AI_INSIGHTS')}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
                         activeTab === 'AI_INSIGHTS' ? 'bg-[#244B36] text-white shadow-xs' : 'text-[#778078] hover:text-[#244B36]'
                       }`}
                     >
                       <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      <span>AI Predictive Intelligence</span>
+                      <span>AI Predictive</span>
                     </button>
                   </div>
                 </div>
@@ -691,7 +702,21 @@ export const ZonesPage: React.FC<ZonesPageProps> = ({ systemMode = 'SIMULATION' 
                 />
               )}
 
-              {/* TAB 3: AI PREDICTIVE INTELLIGENCE & WATER OPTIMIZATION */}
+              {/* TAB 3: SMART GARDEN PIPE & MOTOR DESIGNER */}
+              {activeTab === 'PIPE_DESIGNER' && (
+                <GardenPipeDesigner
+                  zoneId={zoneDetail.zone_id}
+                  zoneName={zoneDetail.name}
+                  systemMode={systemMode}
+                  isPumpRunning={zoneDetail.current_pump_state === 'RUNNING'}
+                  onZoneSettingsApplied={(newTarget, newDry) => {
+                    setZoneDetail(prev => prev ? { ...prev, soil_moisture_target: newTarget, soil_moisture_dry_threshold: newDry } : null);
+                    fetchZones();
+                  }}
+                />
+              )}
+
+              {/* TAB 4: AI PREDICTIVE INTELLIGENCE & WATER OPTIMIZATION */}
               {activeTab === 'AI_INSIGHTS' && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

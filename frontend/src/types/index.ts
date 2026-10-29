@@ -432,3 +432,90 @@ export interface AIChatResponse {
   created_at: string;
 }
 
+// ==================== GARDEN PIPE & MOTOR DESIGNER TYPES ====================
+
+export type GardenComponentType = 
+  | 'WATER_SOURCE'
+  | 'MOTOR_PUMP'
+  | 'JUNCTION'
+  | 'VALVE'
+  | 'DRIP_OUTLET'
+  | 'PLANT_ZONE';
+
+export type PipeType = 'MAIN' | 'BRANCH';
+
+export interface GardenComponent {
+  id: string;
+  type: GardenComponentType;
+  name: string;
+  x: number;
+  y: number;
+  status?: string;
+  plant_id?: number | null;
+  properties?: Record<string, any>;
+}
+
+export interface GardenPipe {
+  id: string;
+  type: PipeType;
+  from_node_id: string;
+  from_port: string;
+  to_node_id: string;
+  to_port: string;
+  points?: Array<{ x: number; y: number }>;
+  status?: string;
+}
+
+export interface GardenNetworkPayload {
+  components: GardenComponent[];
+  pipes: GardenPipe[];
+  metadata?: Record<string, any>;
+}
+
+export interface NetworkValidationIssue {
+  code: string;
+  severity: 'ERROR' | 'WARNING' | 'INFO';
+  message: string;
+  component_id?: string | null;
+}
+
+export interface NetworkValidationResponse {
+  is_valid: boolean;
+  status: 'VALID' | 'WARNING' | 'ERROR';
+  total_components: number;
+  total_pipes: number;
+  has_water_source: boolean;
+  has_motor_pump: boolean;
+  connected_plant_ids: string[];
+  unreachable_plant_ids: string[];
+  reachable_zones_count: number;
+  total_zones_count: number;
+  issues: NetworkValidationIssue[];
+  summary: string;
+}
+
+export interface GardenIrrigationTask {
+  step: number;
+  target_id: string;
+  target_name: string;
+  water_category: string;
+  current_moisture: number;
+  target_moisture: number;
+  duration_seconds: number;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  supply_path: string[];
+  valve_states?: Record<string, string>;
+  explanation: string;
+}
+
+export interface GardenIrrigationPlanResponse {
+  zone_id: string;
+  generated_at: string;
+  total_tasks: number;
+  total_water_liters_estimate: number;
+  flow_rate_lpm: number;
+  unreachable_warnings: string[];
+  tasks: GardenIrrigationTask[];
+  summary: string;
+}
+
