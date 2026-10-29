@@ -84,7 +84,7 @@ class SensorReadingResponse(BaseModel):
 class CommandRequest(BaseModel):
     action: str = Field(..., description="START_PUMP, STOP_PUMP, EMERGENCY_STOP")
     device_id: Optional[str] = None
-    duration_seconds: Optional[int] = Field(None, ge=10, le=1800, description="Max runtime limit in seconds")
+    duration_seconds: Optional[int] = Field(None, ge=10, le=86400, description="Runtime duration in seconds (up to 24 hours)")
     reason: Optional[str] = "Manual remote action"
 
 class CommandResponse(BaseModel):
@@ -218,4 +218,175 @@ class DiagnosticsResponse(BaseModel):
     recent_errors: List[str] = []
     active_alerts: List[Dict[str, Any]] = []
     uptime_seconds: float
+
+# Device Connection Settings Schemas
+class DeviceConnectionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    active_mode: str # "DIRECT_ESP32" or "RPI_GATEWAY"
+    direct_esp32_id: str
+    direct_esp32_ip: str
+    direct_esp32_protocol: str
+    direct_esp32_status: str
+    direct_last_verified_at: Optional[datetime.datetime] = None
+    direct_last_error: Optional[str] = None
+    rpi_device_id: str
+    rpi_ip: str
+    rpi_mqtt_host: str
+    rpi_mqtt_port: int
+    rpi_status: str
+    rpi_esp32_status: str
+    rpi_last_verified_at: Optional[datetime.datetime] = None
+    rpi_last_error: Optional[str] = None
+    updated_at: datetime.datetime
+
+class DeviceConnectionUpdate(BaseModel):
+    active_mode: Optional[str] = Field(None, description="'DIRECT_ESP32' or 'RPI_GATEWAY'")
+    direct_esp32_id: Optional[str] = None
+    direct_esp32_ip: Optional[str] = None
+    direct_esp32_protocol: Optional[str] = None
+    rpi_device_id: Optional[str] = None
+    rpi_ip: Optional[str] = None
+    rpi_mqtt_host: Optional[str] = None
+    rpi_mqtt_port: Optional[int] = Field(None, ge=1, le=65535)
+
+class TestConnectionResponse(BaseModel):
+    connection_mode: str
+    status: str # "CONNECTED", "DISCONNECTED", "UNKNOWN"
+    tested_at: datetime.datetime
+    details: Dict[str, Any]
+    error: Optional[str] = None
+
+# Plant Schemas
+class PlantBase(BaseModel):
+    plant_name: str = Field(..., min_length=1, max_length=100)
+    water_category: str = Field(..., description="'HIGH', 'MEDIUM', or 'LOW'")
+    desired_moisture_min: float = Field(default=50.0, ge=0.0, le=100.0)
+    desired_moisture_max: float = Field(default=75.0, ge=0.0, le=100.0)
+    target_moisture: float = Field(default=65.0, ge=0.0, le=100.0)
+    pos_x: float = Field(default=100.0)
+    pos_y: float = Field(default=100.0)
+    width: Optional[float] = Field(default=140.0)
+    height: Optional[float] = Field(default=100.0)
+    watering_interval_days: Optional[int] = Field(None, ge=1, le=365)
+    notes: Optional[str] = None
+
+class PlantCreate(PlantBase):
+    pass
+
+class PlantUpdate(BaseModel):
+    plant_name: Optional[str] = None
+    water_category: Optional[str] = None
+    desired_moisture_min: Optional[float] = None
+    desired_moisture_max: Optional[float] = None
+    target_moisture: Optional[float] = None
+    pos_x: Optional[float] = None
+    pos_y: Optional[float] = None
+    width: Optional[float] = None
+    height: Optional[float] = None
+    watering_interval_days: Optional[int] = None
+    notes: Optional[str] = None
+
+class PlantResponse(PlantBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    zone_id: str
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+class PlantLayoutItemUpdate(BaseModel):
+    id: Optional[int] = None
+    plant_name: str
+    water_category: str
+    desired_moisture_min: Optional[float] = 50.0
+    desired_moisture_max: Optional[float] = 75.0
+    target_moisture: Optional[float] = 65.0
+    pos_x: float
+    pos_y: float
+    width: Optional[float] = 140.0
+    height: Optional[float] = 100.0
+    watering_interval_days: Optional[int] = None
+    notes: Optional[str] = None
+
+class BulkLayoutUpdateRequest(BaseModel):
+    plants: List[PlantLayoutItemUpdate]
+
+# Zone Schemas
+class ZoneCreate(BaseModel):
+    zone_id: str = Field(..., min_length=2, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
+    name: str = Field(..., min_length=2, max_length=255)
+    description: Optional[str] = None
+    location: Optional[str] = None
+    plant_categories: Optional[str] = "Vegetables"
+    controller_device_id: Optional[str] = "esp32-zone-01"
+    pump_device_id: Optional[str] = "pump-zone-01"
+    soil_moisture_target: Optional[float] = Field(70.0, ge=20.0, le=95.0)
+    soil_moisture_dry_threshold: Optional[float] = Field(35.0, ge=10.0, le=80.0)
+    hysteresis_buffer: Optional[float] = Field(5.0, ge=1.0, le=20.0)
+    max_runtime_seconds: Optional[int] = Field(300, ge=30, le=1800)
+    cooldown_minutes: Optional[int] = Field(30, ge=5, le=360)
+    auto_irrigation_enabled: Optional[bool] = True
+    notes: Optional[str] = None
+
+class ZoneUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+    plant_categories: Optional[str] = None
+    controller_device_id: Optional[str] = None
+    pump_device_id: Optional[str] = None
+    soil_moisture_target: Optional[float] = Field(None, ge=20.0, le=95.0)
+    soil_moisture_dry_threshold: Optional[float] = Field(None, ge=10.0, le=80.0)
+    hysteresis_buffer: Optional[float] = Field(None, ge=1.0, le=20.0)
+    max_runtime_seconds: Optional[int] = Field(None, ge=30, le=1800)
+    cooldown_minutes: Optional[int] = Field(None, ge=5, le=360)
+    auto_irrigation_enabled: Optional[bool] = None
+    is_active: Optional[bool] = None
+    notes: Optional[str] = None
+
+class ZoneResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    zone_id: str
+    name: str
+    description: Optional[str] = None
+    location: Optional[str] = None
+    plant_categories: Optional[str] = None
+    controller_device_id: str
+    pump_device_id: str
+    soil_moisture_target: float
+    soil_moisture_dry_threshold: float
+    hysteresis_buffer: float
+    max_runtime_seconds: int
+    cooldown_minutes: int
+    auto_irrigation_enabled: bool
+    is_active: bool
+    notes: Optional[str] = None
+    current_pump_state: str
+    last_irrigated_at: Optional[datetime.datetime] = None
+    plant_count: int = 0
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+class ZoneDetailResponse(ZoneResponse):
+    plants: List[PlantResponse] = []
+    latest_reading: Optional[SensorReadingResponse] = None
+    hardware_status: Optional[str] = "ONLINE"
+
+class ZonePlanCalculationResponse(BaseModel):
+    zone_id: str
+    total_plants: int
+    high_count: int
+    medium_count: int
+    low_count: int
+    calculated_target_moisture: float
+    calculated_dry_threshold: float
+    explanation: str
+    has_conflict: bool
+    conflict_warning: Optional[str] = None
+    plants_summary: List[Dict[str, Any]]
+
+class ApplyZoneSettingsRequest(BaseModel):
+    soil_moisture_target: float = Field(..., ge=20.0, le=95.0)
+    soil_moisture_dry_threshold: float = Field(..., ge=10.0, le=80.0)
 

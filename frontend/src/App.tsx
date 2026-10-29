@@ -16,6 +16,7 @@ import { HistoryPage } from './pages/HistoryPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { DiagnosticsPage } from './pages/DiagnosticsPage';
 import { LoginPage } from './pages/LoginPage';
+import { ZonesPage } from './pages/ZonesPage';
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,14 @@ const AppContent: React.FC = () => {
                   onOpenSimulator={() => setIsSimulatorOpen(true)}
                   onPumpStateChange={setCurrentPumpState}
                 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/zones"
+            element={
+              <ProtectedRoute>
+                <ZonesPage systemMode={systemMode} />
               </ProtectedRoute>
             }
           />

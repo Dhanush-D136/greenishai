@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, Server, Power, Droplets, Thermometer, Sun, CloudRain, CheckCircle2, AlertTriangle, XCircle, RefreshCw, Info } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Cpu, Server, Power, Droplets, Thermometer, Sun, CloudRain, CheckCircle2, AlertTriangle, XCircle, RefreshCw, Info, Network } from 'lucide-react';
 import { api } from '../services/api';
-import { DeviceInfo } from '../types';
+import { DeviceInfo, DeviceConnectionSettings } from '../types';
 
 export const DevicesPage: React.FC = () => {
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
+  const [connSettings, setConnSettings] = useState<DeviceConnectionSettings | null>(null);
 
   const fetchDevices = async () => {
     try {
-      const res = await api.getDevices();
-      setDevices(res.devices);
-      if (res.devices.length > 0 && !selectedDevice) {
-        setSelectedDevice(res.devices[0]);
+      const [devRes, connRes] = await Promise.all([
+        api.getDevices(),
+        api.getConnectionSettings().catch(() => null)
+      ]);
+      setDevices(devRes.devices);
+      if (connRes) {
+        setConnSettings(connRes);
+      }
+      if (devRes.devices.length > 0 && !selectedDevice) {
+        setSelectedDevice(devRes.devices[0]);
       }
     } catch (err) {
       console.error('Failed to load devices', err);
@@ -77,6 +85,38 @@ export const DevicesPage: React.FC = () => {
           <span>Scan Network</span>
         </button>
       </div>
+
+      {/* Active Device Connection Mode Status Bar */}
+      {connSettings && (
+        <div className="p-4 rounded-2xl bg-white border border-[#A9BBA0]/40 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#E7EFE4] flex items-center justify-center text-[#244B36]">
+              <Network className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#27342C]">Active Connection Architecture:</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#244B36] text-white">
+                  {connSettings.active_mode === 'DIRECT_ESP32' ? 'Direct ESP32' : 'Raspberry Pi 4B Gateway'}
+                </span>
+                {getStatusBadge(connSettings.active_mode === 'DIRECT_ESP32' ? connSettings.direct_esp32_status : connSettings.rpi_status)}
+              </div>
+              <span className="text-[10px] text-[#778078]">
+                {connSettings.active_mode === 'DIRECT_ESP32'
+                  ? `Direct device: ${connSettings.direct_esp32_id} (${connSettings.direct_esp32_ip}) via ${connSettings.direct_esp32_protocol}`
+                  : `Gateway: ${connSettings.rpi_device_id} (${connSettings.rpi_ip}) via MQTT ${connSettings.rpi_mqtt_host}:${connSettings.rpi_mqtt_port}`}
+              </span>
+            </div>
+          </div>
+
+          <Link
+            to="/settings"
+            className="self-start sm:self-auto px-3 py-1.5 rounded-xl border border-[#A9BBA0]/40 text-xs font-semibold text-[#244B36] hover:bg-[#FAF8F1] transition-colors"
+          >
+            Configure Connection →
+          </Link>
+        </div>
+      )}
 
       {/* Grid of Device Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

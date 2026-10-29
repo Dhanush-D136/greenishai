@@ -10,7 +10,13 @@ import type {
   HardwareSettings,
   SystemAlert,
   SimulationStatus,
-  User
+  User,
+  DeviceConnectionSettings,
+  TestConnectionResult,
+  IrrigationZone,
+  ZoneDetail,
+  ZonePlant,
+  ZonePlanCalculation
 } from '../types';
 
 const API_BASE = '/api';
@@ -358,5 +364,190 @@ export const api = {
       method: 'POST'
     });
     return handleResponse<{ status: string; message: string }>(res);
+  },
+
+  // Device Connection API
+  async getConnectionSettings(): Promise<DeviceConnectionSettings> {
+    const res = await fetch(`${API_BASE}/settings/connection`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<DeviceConnectionSettings>(res);
+  },
+
+  async updateConnectionSettings(payload: Partial<DeviceConnectionSettings>): Promise<DeviceConnectionSettings> {
+    const res = await fetch(`${API_BASE}/settings/connection`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse<DeviceConnectionSettings>(res);
+  },
+
+  async testDirectEsp32(): Promise<TestConnectionResult> {
+    const res = await fetch(`${API_BASE}/settings/connection/test-esp32`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<TestConnectionResult>(res);
+  },
+
+  async testRpiGateway(): Promise<TestConnectionResult> {
+    const res = await fetch(`${API_BASE}/settings/connection/test-gateway`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<TestConnectionResult>(res);
+  },
+
+  // Zones Management API
+  async getZones(): Promise<IrrigationZone[]> {
+    const res = await fetch(`${API_BASE}/zones`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<IrrigationZone[]>(res);
+  },
+
+  async createZone(payload: any): Promise<IrrigationZone> {
+    const res = await fetch(`${API_BASE}/zones`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse<IrrigationZone>(res);
+  },
+
+  async getZoneDetail(zoneId: string): Promise<ZoneDetail> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<ZoneDetail>(res);
+  },
+
+  async updateZone(zoneId: string, payload: any): Promise<IrrigationZone> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse<IrrigationZone>(res);
+  },
+
+  async deleteZone(zoneId: string): Promise<{ status: string; message: string }> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}`, {
+      method: 'DELETE',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<{ status: string; message: string }>(res);
+  },
+
+  async toggleZoneAutonomy(zoneId: string, enabled: boolean): Promise<{ status: string; auto_irrigation_enabled: boolean; message: string }> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/autonomy`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify({ auto_irrigation_enabled: enabled })
+    });
+    return handleResponse(res);
+  },
+
+  async irrigateZone(zoneId: string, action: 'START' | 'STOP', durationSeconds?: number, reason?: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/irrigate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify({
+        action,
+        duration_seconds: durationSeconds,
+        reason
+      })
+    });
+    return handleResponse(res);
+  },
+
+  // Plant Layout & Water Planning API
+  async getZonePlants(zoneId: string): Promise<ZonePlant[]> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/plants`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<ZonePlant[]>(res);
+  },
+
+  async addZonePlant(zoneId: string, payload: Partial<ZonePlant>): Promise<ZonePlant> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/plants`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse<ZonePlant>(res);
+  },
+
+  async updateZonePlant(zoneId: string, plantId: number, payload: Partial<ZonePlant>): Promise<ZonePlant> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/plants/${plantId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse<ZonePlant>(res);
+  },
+
+  async deleteZonePlant(zoneId: string, plantId: number): Promise<{ status: string; message: string }> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/plants/${plantId}`, {
+      method: 'DELETE',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<{ status: string; message: string }>(res);
+  },
+
+  async saveBulkLayout(zoneId: string, plants: Partial<ZonePlant>[]): Promise<{ status: string; message: string }> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/layout`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify({ plants })
+    });
+    return handleResponse(res);
+  },
+
+  async calculateZonePlan(zoneId: string): Promise<ZonePlanCalculation> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/calculate-plan`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<ZonePlanCalculation>(res);
+  },
+
+  async applyZonePlan(zoneId: string, targetMoisture: number, dryThreshold: number): Promise<{ status: string; message: string; soil_moisture_target: number; soil_moisture_dry_threshold: number }> {
+    const res = await fetch(`${API_BASE}/zones/${encodeURIComponent(zoneId)}/apply-plan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify({
+        soil_moisture_target: targetMoisture,
+        soil_moisture_dry_threshold: dryThreshold
+      })
+    });
+    return handleResponse(res);
   }
 };

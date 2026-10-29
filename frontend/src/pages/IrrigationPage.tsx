@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Droplet, 
+  Sprout,
   Play, 
   Square, 
   AlertOctagon, 
@@ -239,13 +241,22 @@ export const IrrigationPage: React.FC<IrrigationPageProps> = ({
           </div>
           <p className="text-xs sm:text-sm text-[#778078]">Authoritative zone actuator controls, safety interlocks, and automation permissions</p>
         </div>
-        <button
-          onClick={loadData}
-          className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-[#A9BBA0]/40 text-xs font-semibold text-[#244B36] hover:bg-[#E7EFE4] transition-colors shadow-xs"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh State</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to="/zones"
+            className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#244B36] text-white text-xs font-bold hover:bg-[#1a3828] transition-colors shadow-xs"
+          >
+            <Sprout className="w-3.5 h-3.5" />
+            <span>Zones & Plant Layout →</span>
+          </Link>
+          <button
+            onClick={loadData}
+            className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-[#A9BBA0]/40 text-xs font-semibold text-[#244B36] hover:bg-[#E7EFE4] transition-colors shadow-xs"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh State</span>
+          </button>
+        </div>
       </div>
 
       {/* Dynamic Feedback Notification Banner */}

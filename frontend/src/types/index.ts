@@ -211,3 +211,103 @@ export interface HardwareSettings {
   sync_status?: string;
   last_sync_time?: string | null;
 }
+
+// Device Connection Settings
+export interface DeviceConnectionSettings {
+  id: number;
+  active_mode: 'DIRECT_ESP32' | 'RPI_GATEWAY';
+  direct_esp32_id: string;
+  direct_esp32_ip: string;
+  direct_esp32_protocol: string;
+  direct_esp32_status: 'CONNECTED' | 'DISCONNECTED' | 'UNKNOWN';
+  direct_last_verified_at?: string | null;
+  direct_last_error?: string | null;
+  rpi_device_id: string;
+  rpi_ip: string;
+  rpi_mqtt_host: string;
+  rpi_mqtt_port: number;
+  rpi_status: 'CONNECTED' | 'DISCONNECTED' | 'UNKNOWN';
+  rpi_esp32_status: 'CONNECTED' | 'DISCONNECTED' | 'UNKNOWN';
+  rpi_last_verified_at?: string | null;
+  rpi_last_error?: string | null;
+  updated_at: string;
+}
+
+export interface TestConnectionResult {
+  connection_mode: string;
+  status: 'CONNECTED' | 'DISCONNECTED' | 'UNKNOWN';
+  tested_at: string;
+  details: Record<string, any>;
+  error?: string | null;
+}
+
+// Plant & Zone Management Types
+export type WaterCategory = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface ZonePlant {
+  id: number;
+  zone_id: string;
+  plant_name: string;
+  water_category: WaterCategory;
+  desired_moisture_min: number;
+  desired_moisture_max: number;
+  target_moisture: number;
+  pos_x: number;
+  pos_y: number;
+  width?: number;
+  height?: number;
+  watering_interval_days?: number | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IrrigationZone {
+  id: number;
+  zone_id: string;
+  name: string;
+  description?: string | null;
+  location?: string | null;
+  plant_categories?: string | null;
+  controller_device_id: string;
+  pump_device_id: string;
+  soil_moisture_target: number;
+  soil_moisture_dry_threshold: number;
+  hysteresis_buffer: number;
+  max_runtime_seconds: number;
+  cooldown_minutes: number;
+  auto_irrigation_enabled: boolean;
+  is_active: boolean;
+  notes?: string | null;
+  current_pump_state: string;
+  last_irrigated_at?: string | null;
+  plant_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ZoneDetail extends IrrigationZone {
+  plants: ZonePlant[];
+  latest_reading?: SensorReading | null;
+  hardware_status?: string;
+}
+
+export interface ZonePlanCalculation {
+  zone_id: string;
+  total_plants: number;
+  high_count: number;
+  medium_count: number;
+  low_count: number;
+  calculated_target_moisture: number;
+  calculated_dry_threshold: number;
+  explanation: string;
+  has_conflict: boolean;
+  conflict_warning?: string | null;
+  plants_summary: Array<{
+    name: string;
+    category: string;
+    target: number;
+    range: string;
+  }>;
+}
+

@@ -184,3 +184,73 @@ class AuditLog(Base):
     
     user = relationship("User", back_populates="audit_logs")
 
+class DeviceConnectionSetting(Base):
+    __tablename__ = "device_connection_settings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    active_mode = Column(String(50), default="DIRECT_ESP32") # "DIRECT_ESP32", "RPI_GATEWAY"
+    direct_esp32_id = Column(String(100), default="esp32-zone-01")
+    direct_esp32_ip = Column(String(100), default="192.168.1.105")
+    direct_esp32_protocol = Column(String(50), default="MQTT") # "MQTT", "HTTP_REST"
+    direct_esp32_status = Column(String(50), default="DISCONNECTED") # "CONNECTED", "DISCONNECTED", "UNKNOWN"
+    direct_last_verified_at = Column(DateTime(timezone=True), nullable=True)
+    direct_last_error = Column(String(255), nullable=True)
+    
+    rpi_device_id = Column(String(100), default="rpi-edge-01")
+    rpi_ip = Column(String(100), default="192.168.1.200")
+    rpi_mqtt_host = Column(String(100), default="127.0.0.1")
+    rpi_mqtt_port = Column(Integer, default=1883)
+    rpi_status = Column(String(50), default="DISCONNECTED") # "CONNECTED", "DISCONNECTED", "UNKNOWN"
+    rpi_esp32_status = Column(String(50), default="DISCONNECTED") # "CONNECTED", "DISCONNECTED", "UNKNOWN"
+    rpi_last_verified_at = Column(DateTime(timezone=True), nullable=True)
+    rpi_last_error = Column(String(255), nullable=True)
+    
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+class IrrigationZone(Base):
+    __tablename__ = "irrigation_zones"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    zone_id = Column(String(100), unique=True, index=True, nullable=False) # e.g. "zone-01"
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    location = Column(String(255), nullable=True)
+    plant_categories = Column(String(255), default="Vegetables")
+    controller_device_id = Column(String(100), default="esp32-zone-01")
+    pump_device_id = Column(String(100), default="pump-zone-01")
+    soil_moisture_target = Column(Float, default=70.0)
+    soil_moisture_dry_threshold = Column(Float, default=35.0)
+    hysteresis_buffer = Column(Float, default=5.0)
+    max_runtime_seconds = Column(Integer, default=300)
+    cooldown_minutes = Column(Integer, default=30)
+    auto_irrigation_enabled = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True)
+    notes = Column(Text, nullable=True)
+    current_pump_state = Column(String(20), default="OFF") # "OFF", "RUNNING"
+    last_irrigated_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    
+    plants = relationship("ZonePlant", back_populates="zone", cascade="all, delete-orphan", lazy="joined")
+
+class ZonePlant(Base):
+    __tablename__ = "zone_plants"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    zone_id = Column(String(100), ForeignKey("irrigation_zones.zone_id", ondelete="CASCADE"), nullable=False, index=True)
+    plant_name = Column(String(100), nullable=False)
+    water_category = Column(String(50), default="MEDIUM") # "HIGH", "MEDIUM", "LOW"
+    desired_moisture_min = Column(Float, default=50.0)
+    desired_moisture_max = Column(Float, default=75.0)
+    target_moisture = Column(Float, default=65.0)
+    pos_x = Column(Float, default=100.0)
+    pos_y = Column(Float, default=100.0)
+    width = Column(Float, default=140.0)
+    height = Column(Float, default=100.0)
+    watering_interval_days = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    
+    zone = relationship("IrrigationZone", back_populates="plants")
+

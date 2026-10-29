@@ -1,15 +1,15 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Droplet, BarChart3, Cpu, Settings } from 'lucide-react';
+import { LayoutDashboard, Droplet, Sprout, Cpu, Settings } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const location = useLocation();
 
   const tabs = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/devices', label: 'Devices', icon: Cpu },
+    { to: '/zones', label: 'Zones', icon: Sprout },
     { to: '/irrigation', label: 'Irrigation', icon: Droplet },
-    { to: '/history', label: 'History', icon: BarChart3 },
+    { to: '/devices', label: 'Devices', icon: Cpu },
     { to: '/settings', label: 'Settings', icon: Settings },
   ];
 

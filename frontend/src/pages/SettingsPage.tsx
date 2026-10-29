@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { IrrigationSetting, HardwareSettings } from '../types';
+import { DeviceConnectionSection } from '../components/DeviceConnectionSection';
 
 interface SettingsPageProps {
   systemMode?: 'SIMULATION' | 'HARDWARE';
@@ -29,7 +30,7 @@ interface SettingsPageProps {
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ systemMode = 'SIMULATION', onModeChanged }) => {
-  const [activeTab, setActiveTab] = useState<'THRESHOLDS' | 'HARDWARE'>('THRESHOLDS');
+  const [activeTab, setActiveTab] = useState<'THRESHOLDS' | 'HARDWARE' | 'CONNECTION'>('THRESHOLDS');
   const [settings, setSettings] = useState<IrrigationSetting | null>(null);
   const [hardware, setHardware] = useState<HardwareSettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -250,6 +251,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ systemMode = 'SIMULA
           >
             <Cpu className="w-3.5 h-3.5" />
             <span>Hardware Devices & Sensors</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab('CONNECTION'); setActionFeedback(null); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'CONNECTION'
+                ? 'bg-[#244B36] text-white shadow-xs'
+                : 'text-[#778078] hover:text-[#244B36]'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5" />
+            <span>Device Connection</span>
           </button>
         </div>
       </div>
@@ -748,6 +760,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ systemMode = 'SIMULA
 
           </form>
         </div>
+      )}
+
+      {/* TAB 3: DEVICE CONNECTION ARCHITECTURE */}
+      {activeTab === 'CONNECTION' && (
+        <DeviceConnectionSection onSettingsChanged={() => {}} />
       )}
 
     </div>

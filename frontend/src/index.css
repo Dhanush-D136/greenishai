@@ -136,3 +136,73 @@
   animation: logo-aura-pulse 4s ease-in-out 0.4s infinite;
 }
 
+/* ============================================================== */
+/* MOBILE VIEW ONLY OPTIMIZATIONS (<= 768px)                       */
+/* Strictly scoped to mobile & narrow viewports (320px - 430px)   */
+/* Preserves desktop appearance, layout, typography & spacing     */
+/* ============================================================== */
+@media (max-width: 768px) {
+  /* Prevent horizontal document blowout on all small screens */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    position: relative;
+  }
+
+  /* Compact content wrapper on mobile */
+  main {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 1rem !important;
+  }
+
+  /* Compact glass panels & card spacing on mobile */
+  .glass-panel,
+  .rounded-3xl {
+    border-radius: 1.25rem !important;
+  }
+
+  /* Responsive chart containers: prevent svg from pushing screen wider */
+  .recharts-responsive-container {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Modals: fit within viewport and support vertical scrolling */
+  .fixed.inset-0 .max-w-lg,
+  .fixed.inset-0 .max-w-md,
+  .fixed.inset-0 .max-w-xl {
+    width: calc(100vw - 1.5rem) !important;
+    max-height: 86vh !important;
+    margin: auto !important;
+  }
+
+  /* Ensure touch targets meet ~44x44px minimum for primary interactions */
+  button:not(.shrink-button),
+  .touch-target {
+    min-height: 40px;
+  }
+
+  /* Mobile bottom nav safe padding so content never gets covered */
+  .pb-20 {
+    padding-bottom: 5.5rem !important;
+  }
+
+  /* Ensure tables scroll smoothly horizontally without breaking card bounds */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  /* Responsive text adjustments for tight screens (320px - 360px) */
+  @media (max-width: 360px) {
+    h1 {
+      font-size: 1.25rem !important;
+      line-height: 1.6rem !important;
+    }
+    h2 {
+      font-size: 1.05rem !important;
+    }
+  }
+}
+

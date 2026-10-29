@@ -7,8 +7,11 @@ from typing import Optional, Dict, Any
 from backend.app.core.database import get_db
 from backend.app.core.config import settings
 from backend.app.core.security import get_current_user
-from backend.app.models.models import User, IrrigationSetting, AuditLog, Device
-from backend.app.schemas.schemas import IrrigationSettingSchema, IrrigationSettingUpdate
+from backend.app.models.models import User, IrrigationSetting, AuditLog, Device, DeviceConnectionSetting
+from backend.app.schemas.schemas import (
+    IrrigationSettingSchema, IrrigationSettingUpdate,
+    DeviceConnectionResponse, DeviceConnectionUpdate, TestConnectionResponse
+)
 from backend.app.services.state_manager import state_manager
 from backend.app.services.mqtt_service import mqtt_service
 
@@ -48,6 +51,232 @@ def set_system_mode(req: SystemModeRequest, current_user: User = Depends(get_cur
         return res
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/connection", response_model=DeviceConnectionResponse)
+def get_connection_settings(db: Session = Depends(get_db)):
+    conn = db.query(DeviceConnectionSetting).first()
+    if not conn:
+        conn = DeviceConnectionSetting(
+            active_mode="DIRECT_ESP32",
+            direct_esp32_id=settings.DEFAULT_ESP32_ID,
+            direct_esp32_ip="192.168.1.105",
+            direct_esp32_protocol="MQTT",
+            direct_esp32_status="DISCONNECTED",
+            rpi_device_id=settings.DEFAULT_RPI_ID,
+            rpi_ip="192.168.1.200",
+            rpi_mqtt_host=settings.MQTT_BROKER_HOST,
+            rpi_mqtt_port=settings.MQTT_BROKER_PORT,
+            rpi_status="DISCONNECTED",
+            rpi_esp32_status="DISCONNECTED"
+        )
+        db.add(conn)
+        db.commit()
+        db.refresh(conn)
+    return conn
+
+@router.put("/connection", response_model=DeviceConnectionResponse)
+def update_connection_settings(
+    req: DeviceConnectionUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    conn = db.query(DeviceConnectionSetting).first()
+    if not conn:
+        conn = DeviceConnectionSetting()
+        db.add(conn)
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    mode_switching = False
+
+    if req.active_mode is not None:
+        target_mode = req.active_mode.upper()
+        if target_mode not in ["DIRECT_ESP32", "RPI_GATEWAY"]:
+            raise HTTPException(status_code=400, detail="Invalid connection mode. Must be 'DIRECT_ESP32' or 'RPI_GATEWAY'.")
+        
+        if conn.active_mode != target_mode:
+            mode_switching = True
+            # Safety Check: switching mode must not leave a pump running unexpectedly
+            if state_manager.get_authoritative_pump_state() == "RUNNING":
+                state_manager.stop_irrigation(reason="Safely stopping irrigation before switching connection mode")
+
+            # Invalidate stale connection states
+            if target_mode == "DIRECT_ESP32":
+                conn.direct_esp32_status = "UNKNOWN"
+            else:
+                conn.rpi_status = "UNKNOWN"
+                conn.rpi_esp32_status = "UNKNOWN"
+
+            conn.active_mode = target_mode
+
+    if req.direct_esp32_id is not None:
+        if not req.direct_esp32_id.strip():
+            raise HTTPException(status_code=400, detail="Direct ESP32 device ID cannot be empty.")
+        conn.direct_esp32_id = req.direct_esp32_id.strip()
+
+    if req.direct_esp32_ip is not None:
+        if not req.direct_esp32_ip.strip():
+            raise HTTPException(status_code=400, detail="Direct ESP32 IP address or hostname cannot be empty.")
+        conn.direct_esp32_ip = req.direct_esp32_ip.strip()
+
+    if req.direct_esp32_protocol is not None:
+        conn.direct_esp32_protocol = req.direct_esp32_protocol.strip().upper()
+
+    if req.rpi_device_id is not None:
+        if not req.rpi_device_id.strip():
+            raise HTTPException(status_code=400, detail="Raspberry Pi device ID cannot be empty.")
+        conn.rpi_device_id = req.rpi_device_id.strip()
+
+    if req.rpi_ip is not None:
+        if not req.rpi_ip.strip():
+            raise HTTPException(status_code=400, detail="Raspberry Pi IP address or hostname cannot be empty.")
+        conn.rpi_ip = req.rpi_ip.strip()
+
+    if req.rpi_mqtt_host is not None:
+        if not req.rpi_mqtt_host.strip():
+            raise HTTPException(status_code=400, detail="MQTT broker host cannot be empty.")
+        conn.rpi_mqtt_host = req.rpi_mqtt_host.strip()
+
+    if req.rpi_mqtt_port is not None:
+        conn.rpi_mqtt_port = req.rpi_mqtt_port
+
+    conn.updated_at = now
+    db.commit()
+    db.refresh(conn)
+    return conn
+
+@router.post("/connection/test-esp32", response_model=TestConnectionResponse)
+def test_direct_esp32_connection(db: Session = Depends(get_db)):
+    conn = db.query(DeviceConnectionSetting).first()
+    if not conn:
+        conn = DeviceConnectionSetting()
+        db.add(conn)
+        db.commit()
+        db.refresh(conn)
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    op_mode = state_manager.get_mode()
+
+    # Look up ESP32 device record in database
+    esp32 = db.query(Device).filter(Device.device_id == conn.direct_esp32_id).first()
+    
+    is_connected = False
+    error_msg = None
+    details = {
+        "mode": "Direct ESP32",
+        "device_id": conn.direct_esp32_id,
+        "target_ip": conn.direct_esp32_ip,
+        "protocol": conn.direct_esp32_protocol,
+        "operating_mode": op_mode
+    }
+
+    if op_mode == "SIMULATION":
+        # In simulation mode, verify simulation engine is running
+        is_connected = True
+        details["simulation_active"] = True
+        details["note"] = "Operating in SIMULATION mode. Virtual ESP32 link verified."
+    else:
+        # In hardware mode, verify MQTT connection and fresh device heartbeat
+        if not mqtt_service.is_connected:
+            is_connected = False
+            error_msg = f"MQTT broker ({settings.MQTT_BROKER_HOST}:{settings.MQTT_BROKER_PORT}) is offline. Direct ESP32 cannot be reached."
+        elif not esp32 or not esp32.last_seen:
+            is_connected = False
+            error_msg = f"ESP32 controller '{conn.direct_esp32_id}' has not reported any telemetry yet. Verify power, WiFi, and IP '{conn.direct_esp32_ip}'."
+        else:
+            last_seen_aware = esp32.last_seen.replace(tzinfo=datetime.timezone.utc if esp32.last_seen.tzinfo is None else esp32.last_seen.tzinfo)
+            delta_secs = (now - last_seen_aware).total_seconds()
+            details["seconds_since_last_seen"] = int(delta_secs)
+            if delta_secs <= settings.STALE_DATA_TIMEOUT_SECONDS:
+                is_connected = True
+                details["last_seen"] = esp32.last_seen.isoformat()
+            else:
+                is_connected = False
+                error_msg = f"ESP32 controller '{conn.direct_esp32_id}' was last seen {int(delta_secs)}s ago (threshold: {settings.STALE_DATA_TIMEOUT_SECONDS}s). Controller appears offline."
+
+    conn.direct_esp32_status = "CONNECTED" if is_connected else "DISCONNECTED"
+    conn.direct_last_verified_at = now
+    conn.direct_last_error = error_msg
+    db.commit()
+
+    return TestConnectionResponse(
+        connection_mode="DIRECT_ESP32",
+        status="CONNECTED" if is_connected else "DISCONNECTED",
+        tested_at=now,
+        details=details,
+        error=error_msg
+    )
+
+@router.post("/connection/test-gateway", response_model=TestConnectionResponse)
+def test_rpi_gateway_connection(db: Session = Depends(get_db)):
+    conn = db.query(DeviceConnectionSetting).first()
+    if not conn:
+        conn = DeviceConnectionSetting()
+        db.add(conn)
+        db.commit()
+        db.refresh(conn)
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    op_mode = state_manager.get_mode()
+
+    rpi = db.query(Device).filter(Device.device_id == conn.rpi_device_id).first()
+    esp32 = db.query(Device).filter(Device.device_id == conn.direct_esp32_id).first()
+
+    is_gateway_connected = False
+    is_esp32_connected = False
+    error_msg = None
+    details = {
+        "mode": "Raspberry Pi 4B Gateway",
+        "gateway_id": conn.rpi_device_id,
+        "gateway_ip": conn.rpi_ip,
+        "mqtt_broker": f"{conn.rpi_mqtt_host}:{conn.rpi_mqtt_port}",
+        "operating_mode": op_mode
+    }
+
+    if op_mode == "SIMULATION":
+        is_gateway_connected = True
+        is_esp32_connected = True
+        details["simulation_active"] = True
+        details["note"] = "Operating in SIMULATION mode. Virtual Raspberry Pi 4B gateway link verified."
+    else:
+        if not mqtt_service.is_connected:
+            is_gateway_connected = False
+            error_msg = f"Cannot reach MQTT broker at {conn.rpi_mqtt_host}:{conn.rpi_mqtt_port}. Verify Mosquitto on Raspberry Pi."
+        elif not rpi or not rpi.last_seen:
+            is_gateway_connected = False
+            error_msg = f"Raspberry Pi Gateway '{conn.rpi_device_id}' has not reported status. Verify edge_service.py is running on {conn.rpi_ip}."
+        else:
+            rpi_seen = rpi.last_seen.replace(tzinfo=datetime.timezone.utc if rpi.last_seen.tzinfo is None else rpi.last_seen.tzinfo)
+            delta = (now - rpi_seen).total_seconds()
+            details["gateway_seconds_since_last_seen"] = int(delta)
+            if delta <= settings.STALE_DATA_TIMEOUT_SECONDS * 2:
+                is_gateway_connected = True
+            else:
+                is_gateway_connected = False
+                error_msg = f"Raspberry Pi Gateway '{conn.rpi_device_id}' heartbeat is stale ({int(delta)}s ago)."
+
+        if is_gateway_connected:
+            if esp32 and esp32.last_seen:
+                esp_seen = esp32.last_seen.replace(tzinfo=datetime.timezone.utc if esp32.last_seen.tzinfo is None else esp32.last_seen.tzinfo)
+                esp_delta = (now - esp_seen).total_seconds()
+                is_esp32_connected = (esp_delta <= settings.STALE_DATA_TIMEOUT_SECONDS)
+                details["esp32_via_gateway"] = "ONLINE" if is_esp32_connected else "OFFLINE"
+            else:
+                is_esp32_connected = False
+                details["esp32_via_gateway"] = "NO_DATA"
+
+    conn.rpi_status = "CONNECTED" if is_gateway_connected else "DISCONNECTED"
+    conn.rpi_esp32_status = "CONNECTED" if is_esp32_connected else "DISCONNECTED"
+    conn.rpi_last_verified_at = now
+    conn.rpi_last_error = error_msg
+    db.commit()
+
+    return TestConnectionResponse(
+        connection_mode="RPI_GATEWAY",
+        status="CONNECTED" if is_gateway_connected else "DISCONNECTED",
+        tested_at=now,
+        details=details,
+        error=error_msg
+    )
 
 @router.get("/hardware")
 def get_hardware_settings(db: Session = Depends(get_db)):

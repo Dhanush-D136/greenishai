@@ -53,6 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSimulator, systemMode = 'S
 
   const navLinks = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/zones', label: 'Zones', icon: Sprout },
     { to: '/irrigation', label: 'Management', icon: Droplet },
     { to: '/history', label: 'Analytics', icon: BarChart3 },
     { to: '/devices', label: 'Devices', icon: Cpu },

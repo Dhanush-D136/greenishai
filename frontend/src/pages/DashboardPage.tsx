@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Droplets, 
   Thermometer, 
@@ -638,13 +639,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <h2 className="font-bold text-lg text-[#27342C] font-['Outfit']">Zone 01 Irrigation Field Status</h2>
             <p className="text-xs text-[#778078]">Authoritative controller state and calibrated sensor telemetry</p>
           </div>
-          <button
-            onClick={() => { setRefreshing(true); fetchDashboardData(); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#E7EFE4] text-[#244B36] hover:bg-[#DCCCB2]/50 transition-colors"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/zones"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#244B36] text-white hover:bg-[#1a3828] transition-colors shadow-xs"
+            >
+              <span>Manage Zones & Plants →</span>
+            </Link>
+            <button
+              onClick={() => { setRefreshing(true); fetchDashboardData(); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#E7EFE4] text-[#244B36] hover:bg-[#DCCCB2]/50 transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
