@@ -19,7 +19,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let reconnectTimeout: any = null;
 
     function connect() {
-      const backendUrl = import.meta.env.VITE_API_URL;
+      const backendUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') ? 'https://greenishai.onrender.com' : '');
       let wsUrl = '';
       if (backendUrl) {
         const wsProto = backendUrl.startsWith('https') ? 'wss:' : 'ws:';

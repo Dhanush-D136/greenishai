@@ -19,7 +19,7 @@ import type {
   ZonePlanCalculation
 } from '../types';
 
-const rawBase = import.meta.env.VITE_API_URL || '';
+const rawBase = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') ? 'https://greenishai.onrender.com' : '');
 const API_BASE = rawBase ? `${rawBase.replace(/\/$/, '')}/api` : '/api';
 
 function getAuthHeader(): Record<string, string> {
