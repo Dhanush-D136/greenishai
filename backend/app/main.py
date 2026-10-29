@@ -21,6 +21,7 @@ from backend.app.api.diagnostics import router as diagnostics_router
 from backend.app.api.simulation import router as simulation_router
 from backend.app.api.alerts import router as alerts_router
 from backend.app.api.zones import router as zones_router
+from backend.app.api.ai import router as ai_router
 from backend.app.api.ws import router as ws_router
 
 
@@ -244,6 +245,7 @@ app.include_router(diagnostics_router, prefix=settings.API_PREFIX)
 app.include_router(simulation_router, prefix=settings.API_PREFIX)
 app.include_router(alerts_router, prefix=settings.API_PREFIX)
 app.include_router(zones_router, prefix=settings.API_PREFIX)
+app.include_router(ai_router, prefix=settings.API_PREFIX)
 app.include_router(ws_router)
 
 

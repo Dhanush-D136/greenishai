@@ -141,3 +141,4 @@ SmartIrrigate relies on **10 core deterministic algorithms and business rules** 
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0);
      ```
   3. When upstream cloud connection is verified, a background thread batches rows where `synced_upstream = 0`, POSTs them to `/api/sensors/ingest-batch`, and marks `synced_upstream = 1`.
+

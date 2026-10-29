@@ -189,3 +189,4 @@
     *Answer*: Replace Wi-Fi with LoRaWAN (Long Range Wide Area Network), which operates on 868/915MHz sub-GHz frequencies with a 10km range and multi-year battery life, deploying LoRaWAN soil probes across fields communicating with a central LoRaWAN gateway.
 55. **What is the single most valuable engineering lesson learned from building SmartIrrigate?**  
     *Answer*: In cyber-physical IoT systems, software can never assume an actuator changed state just because an electrical command was sent. True reliability requires closed-loop verification, independent hardware watchdogs, and clear separation between human intention and physical execution.
+

@@ -121,3 +121,4 @@ flowchart LR
    - Expand the ESP32 firmware to control a 4-channel relay board, giving each software zone a dedicated physical water valve.
 5. **Integrate an LLM Farm Advisor**:
    - Mount an endpoint `/api/ai/advisor` calling the Google Gemini API with system prompts grounding the LLM in current zone sensor readings, providing educational crop health advice without giving the LLM direct pump actuation rights.
+

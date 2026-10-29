@@ -16,10 +16,16 @@ import type {
   IrrigationZone,
   ZoneDetail,
   ZonePlant,
-  ZonePlanCalculation
+  ZonePlanCalculation,
+  AIForecastResponse,
+  AIAnomalyResponse,
+  AIRecommendationResponse,
+  WaterEfficiencyResponse,
+  AIChatRequest,
+  AIChatResponse
 } from '../types';
 
-let rawBase = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') ? 'https://greenishai.onrender.com' : '');
+let rawBase = import.meta.env.VITE_API_URL || '';
 if (rawBase.includes('greenishai-backend.onrender.com')) {
   rawBase = rawBase.replace('greenishai-backend.onrender.com', 'greenishai.onrender.com');
 }
@@ -553,5 +559,110 @@ export const api = {
       })
     });
     return handleResponse(res);
+  },
+
+  // ==================== CLOUD AI INTELLIGENCE ====================
+
+  async getAIForecast(zoneId: string): Promise<AIForecastResponse> {
+    const res = await fetch(`${API_BASE}/ai/forecast/${encodeURIComponent(zoneId)}`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<AIForecastResponse>(res);
+  },
+
+  async getAIAnomalies(params?: { status?: string; zone_id?: string; category?: string; limit?: number }): Promise<AIAnomalyResponse[]> {
+    const q = new URLSearchParams();
+    if (params?.status) q.append('status', params.status);
+    if (params?.zone_id) q.append('zone_id', params.zone_id);
+    if (params?.category) q.append('category', params.category);
+    if (params?.limit) q.append('limit', params.limit.toString());
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    const res = await fetch(`${API_BASE}/ai/anomalies${qs}`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<AIAnomalyResponse[]>(res);
+  },
+
+  async triggerAIAnomalyScan(): Promise<{ status: string; scanned_at: string; new_anomalies_count: number; anomalies: AIAnomalyResponse[] }> {
+    const res = await fetch(`${API_BASE}/ai/anomalies/scan`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse(res);
+  },
+
+  async acknowledgeAIAnomaly(eventId: string): Promise<AIAnomalyResponse> {
+    const res = await fetch(`${API_BASE}/ai/anomalies/${encodeURIComponent(eventId)}/acknowledge`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<AIAnomalyResponse>(res);
+  },
+
+  async resolveAIAnomaly(eventId: string): Promise<AIAnomalyResponse> {
+    const res = await fetch(`${API_BASE}/ai/anomalies/${encodeURIComponent(eventId)}/resolve`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<AIAnomalyResponse>(res);
+  },
+
+  async getAIRecommendations(params?: { zone_id?: string; status?: string; limit?: number }): Promise<AIRecommendationResponse[]> {
+    const q = new URLSearchParams();
+    if (params?.zone_id) q.append('zone_id', params.zone_id);
+    if (params?.status) q.append('status', params.status);
+    if (params?.limit) q.append('limit', params.limit.toString());
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    const res = await fetch(`${API_BASE}/ai/recommendations${qs}`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<AIRecommendationResponse[]>(res);
+  },
+
+  async evaluateAIRecommendation(zoneId: string): Promise<AIRecommendationResponse> {
+    const res = await fetch(`${API_BASE}/ai/recommendations/evaluate/${encodeURIComponent(zoneId)}`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<AIRecommendationResponse>(res);
+  },
+
+  async approveAIRecommendation(recommendationId: string): Promise<{ status: string; recommendation: any; action: any }> {
+    const res = await fetch(`${API_BASE}/ai/recommendations/${encodeURIComponent(recommendationId)}/approve`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse(res);
+  },
+
+  async rejectAIRecommendation(recommendationId: string): Promise<{ status: string; recommendation_id: string }> {
+    const res = await fetch(`${API_BASE}/ai/recommendations/${encodeURIComponent(recommendationId)}/reject`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse(res);
+  },
+
+  async getWaterEfficiency(zoneId: string, days: number = 7): Promise<WaterEfficiencyResponse> {
+    const res = await fetch(`${API_BASE}/ai/water-efficiency/${encodeURIComponent(zoneId)}?days=${days}`, {
+      headers: { ...getAuthHeader() }
+    });
+    return handleResponse<WaterEfficiencyResponse>(res);
+  },
+
+  async sendAIChat(message: string, conversationId?: string, zoneId?: string): Promise<AIChatResponse> {
+    const res = await fetch(`${API_BASE}/ai/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify({
+        message,
+        conversation_id: conversationId,
+        zone_id: zoneId
+      })
+    });
+    return handleResponse<AIChatResponse>(res);
   }
 };

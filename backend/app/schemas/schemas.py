@@ -390,3 +390,92 @@ class ApplyZoneSettingsRequest(BaseModel):
     soil_moisture_target: float = Field(..., ge=20.0, le=95.0)
     soil_moisture_dry_threshold: float = Field(..., ge=10.0, le=80.0)
 
+# ==================== AI CLOUD INTELLIGENCE SCHEMAS ====================
+
+class AIForecastPoint(BaseModel):
+    timestamp: str
+    moisture_percent: float
+    is_forecast: bool
+    confidence_min: Optional[float] = None
+    confidence_max: Optional[float] = None
+
+class AIForecastResponse(BaseModel):
+    zone_id: str
+    current_moisture: float
+    forecast_30m: Optional[float] = None
+    forecast_60m: Optional[float] = None
+    confidence_interval_30m: Optional[List[float]] = None
+    confidence_interval_60m: Optional[List[float]] = None
+    trend_direction: str # "DRYING", "STABLE", "RISING"
+    model_type: str # "TREND_BASELINE", "EXPONENTIAL_DECAY", "RANDOM_FOREST"
+    model_version: str
+    data_quality: str # "OPTIMAL", "FAIR", "INSUFFICIENT_DATA", "STALE_WARNING"
+    historical_samples_count: int
+    generated_at: str
+    warning_message: Optional[str] = None
+    forecast_curve: List[AIForecastPoint] = []
+
+class AIAnomalyResponse(BaseModel):
+    id: int
+    event_id: str
+    zone_id: Optional[str] = None
+    device_id: Optional[str] = None
+    timestamp: str
+    severity: str # "INFO", "WARNING", "ERROR", "CRITICAL"
+    category: str # "SENSOR", "IRRIGATION", "COMMUNICATION"
+    anomaly_type: str
+    observed_evidence: str
+    explanation: str
+    suggested_action: Optional[str] = None
+    detection_method: str
+    status: str # "ACTIVE", "ACKNOWLEDGED", "RESOLVED"
+    resolved_at: Optional[str] = None
+    resolved_by: Optional[str] = None
+
+class AIRecommendationResponse(BaseModel):
+    id: int
+    recommendation_id: str
+    zone_id: str
+    suggested_action: str # "IRRIGATE", "WAIT", "INSPECT"
+    proposed_duration_seconds: int
+    reason: str
+    current_moisture: float
+    target_moisture: float
+    dry_threshold: float
+    rain_detected: bool
+    forecast_30m: Optional[float] = None
+    confidence: float
+    rules_version: str
+    generated_at: str
+    expires_at: str
+    status: str # "PENDING", "APPROVED", "REJECTED", "EXPIRED", "EXECUTED"
+    action_id: Optional[int] = None
+    is_expired: bool = False
+
+class WaterEfficiencyResponse(BaseModel):
+    zone_id: str
+    period_days: int
+    total_runtime_seconds: int
+    cycle_count: int
+    avg_moisture_gain: float
+    water_consumed_liters_estimate: Optional[float] = None
+    flow_rate_lpm: float
+    efficiency_score: float # 0 - 100
+    inefficient_cycles_count: int
+    rain_watering_cycles_count: int
+    recommendations: List[str] = []
+    daily_runtimes: List[Dict[str, Any]] = []
+
+class AIChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=1000)
+    conversation_id: Optional[str] = None
+    zone_id: Optional[str] = None
+
+class AIChatResponse(BaseModel):
+    conversation_id: str
+    role: str = "assistant"
+    content: str
+    supporting_records: Optional[Dict[str, Any]] = None
+    proposed_action: Optional[Dict[str, Any]] = None
+    created_at: str
+

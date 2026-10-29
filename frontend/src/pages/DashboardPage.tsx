@@ -25,6 +25,9 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceL
 import { api } from '../services/api';
 import { DashboardData, SensorReading, IrrigationEvent, SystemAlert } from '../types';
 import { useRealtime } from '../context/RealtimeContext';
+import { AIForecastCard } from '../components/AIForecastCard';
+import { AIAnomalyList } from '../components/AIAnomalyList';
+import { AIRecommendationsCard } from '../components/AIRecommendationsCard';
 
 interface DashboardPageProps {
   systemMode?: 'SIMULATION' | 'HARDWARE';
@@ -629,6 +632,39 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         </div>
 
+      </div>
+
+      {/* 5.5. CLOUD AI INTELLIGENCE & FORECASTING */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs uppercase tracking-widest text-[#244B36] font-bold">Cloud AI Intelligence</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                ACTIVE
+              </span>
+            </div>
+            <h2 className="text-2xl font-black text-[#27342C] font-['Outfit'] mt-0.5">Predictive Irrigation & Diagnostics</h2>
+          </div>
+        </div>
+
+        {/* 2-column layout: Left = Forecast Card, Right = Recommendations & Anomaly List */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AIForecastCard
+            zoneId="zone-01"
+            zoneName="Zone A — Vegetable Garden"
+            targetMoisture={targetMoisture}
+            dryThreshold={dryThreshold}
+          />
+          <div className="space-y-6">
+            <AIRecommendationsCard
+              zoneId="zone-01"
+              zoneName="Zone A"
+              onActionComplete={fetchDashboardData}
+            />
+            <AIAnomalyList zoneId="zone-01" limit={5} />
+          </div>
+        </div>
       </div>
 
       {/* 6. ACTIVE ZONE TELEMETRY & STATUS TABLE */}

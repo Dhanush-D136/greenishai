@@ -47,3 +47,4 @@ The security posture of SmartIrrigate was evaluated across 5 core domains:
    The ESP32 firmware enforces an independent 5-minute hardware watchdog cutoff (`LOCAL_MAX_RUNTIME_MS = 300000`). Even if an attacker floods the network with malicious `START` commands, the physical firmware will physically de-energize the relay after 5 minutes.
 5. **Sensor Range Validation**:
    [`backend/app/services/irrigation_engine.py:73`](file:///c:/Users/User/Desktop/SmartIrrigate/backend/app/services/irrigation_engine.py#L73) rejects any reading outside $[0\%, 100\%]$, protecting the rule engine from arithmetic overflow or erroneous triggering.
+

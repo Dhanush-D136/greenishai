@@ -71,3 +71,4 @@ The repository includes a 4-container production stack:
 ### D. Cloud Hosting Platforms
 - **Live Backend Host**: **Render** (`https://greenishai.onrender.com`). Deployed as a Docker web service with zero-downtime auto-deploys from GitHub `main`.
 - **Live Frontend Host**: **Vercel** (`https://velgreenish.vercel.app`). Deployed as a static Single Page Application with server-side rewrites to Render in [`frontend/vercel.json`](file:///c:/Users/User/Desktop/SmartIrrigate/frontend/vercel.json).
+

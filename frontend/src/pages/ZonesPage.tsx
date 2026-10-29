@@ -24,11 +24,16 @@ import {
   Layers,
   MapPin,
   FileText,
-  Activity
+  Activity,
+  Sparkles
 } from 'lucide-react';
 import { api } from '../services/api';
 import { IrrigationZone, ZoneDetail, SensorReading, IrrigationEvent, SystemMode } from '../types';
 import { PlantLayoutDesigner } from '../components/PlantLayoutDesigner';
+import { AIForecastCard } from '../components/AIForecastCard';
+import { WaterEfficiencyCard } from '../components/WaterEfficiencyCard';
+import { AIAnomalyList } from '../components/AIAnomalyList';
+import { AIRecommendationsCard } from '../components/AIRecommendationsCard';
 
 interface ZonesPageProps {
   systemMode?: SystemMode;
@@ -42,7 +47,7 @@ export const ZonesPage: React.FC<ZonesPageProps> = ({ systemMode = 'SIMULATION' 
   const [loading, setLoading] = useState<boolean>(true);
   const [detailLoading, setDetailLoading] = useState<boolean>(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'PLANNER'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'PLANNER' | 'AI_INSIGHTS'>('OVERVIEW');
 
   // Modal States
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
@@ -512,7 +517,16 @@ export const ZonesPage: React.FC<ZonesPageProps> = ({ systemMode = 'SIMULATION' 
                       }`}
                     >
                       <Sprout className="w-3.5 h-3.5" />
-                      <span>Plant Layout & Water Planning</span>
+                      <span>Plant Layout & Planning</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('AI_INSIGHTS')}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
+                        activeTab === 'AI_INSIGHTS' ? 'bg-[#244B36] text-white shadow-xs' : 'text-[#778078] hover:text-[#244B36]'
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>AI Predictive Intelligence</span>
                     </button>
                   </div>
                 </div>
@@ -675,6 +689,35 @@ export const ZonesPage: React.FC<ZonesPageProps> = ({ systemMode = 'SIMULATION' 
                     fetchZones();
                   }}
                 />
+              )}
+
+              {/* TAB 3: AI PREDICTIVE INTELLIGENCE & WATER OPTIMIZATION */}
+              {activeTab === 'AI_INSIGHTS' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <AIForecastCard
+                      zoneId={zoneDetail.zone_id}
+                      zoneName={zoneDetail.name}
+                      targetMoisture={zoneDetail.soil_moisture_target}
+                      dryThreshold={zoneDetail.soil_moisture_dry_threshold}
+                    />
+                    <WaterEfficiencyCard
+                      zoneId={zoneDetail.zone_id}
+                      zoneName={zoneDetail.name}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <AIRecommendationsCard
+                      zoneId={zoneDetail.zone_id}
+                      zoneName={zoneDetail.name}
+                      onActionComplete={() => {
+                        fetchZones();
+                      }}
+                    />
+                    <AIAnomalyList zoneId={zoneDetail.zone_id} limit={10} />
+                  </div>
+                </div>
               )}
 
             </div>

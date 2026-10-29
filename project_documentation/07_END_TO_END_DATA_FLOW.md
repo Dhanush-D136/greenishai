@@ -174,3 +174,4 @@ graph TD
      ```
   5. Cloud backend marks command `status = "ACKNOWLEDGED"`, sets authoritative pump state to `RUNNING`, and broadcasts live state to UI.
   6. UI turns pump card into active animated green state: **"State Confirmed: Pumping"**.
+

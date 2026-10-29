@@ -96,3 +96,4 @@ tests\unit\test_pump_and_simulation.py::test_mode_switching_safely_stops_pump PA
 - **Relay Coil Back-EMF**: Electrical flyback diode performance during inductive pump coil de-energization.
 - **RF Wi-Fi Attenuation**: ESP32 RSSI signal degradation through dense greenhouse foliage.
 - **Hardware Power Brownouts**: ESP32 behavior under momentary 3.3V power supply sags when motor starts.
+

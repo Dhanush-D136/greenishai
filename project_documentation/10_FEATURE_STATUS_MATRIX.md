@@ -38,3 +38,4 @@
 | **Machine Learning Soil Forecasting**| Planned | Planned | Planned | N/A | Random Forest Regressor | None | **Planned** | No ML model files or `scikit-learn` in repository. |
 | **Multivariate Anomaly Detection** | Planned | Planned | Planned | N/A | Isolation Forest | None | **Planned** | Simple range check implemented; statistical ML anomaly planned. |
 | **Natural Language Advisory Chatbot**| Planned | Planned | Planned | N/A | Cloud LLM (Gemini / OpenAI API) | None | **Planned** | No conversational UI component or LLM route exists. |
+

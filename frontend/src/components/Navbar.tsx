@@ -12,7 +12,8 @@ import {
   HardDrive,
   LogOut,
   User as UserIcon,
-  RefreshCw
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../context/RealtimeContext';
@@ -20,11 +21,12 @@ import { api } from '../services/api';
 
 interface NavbarProps {
   onOpenSimulator: () => void;
+  onOpenAIChat?: () => void;
   systemMode?: 'SIMULATION' | 'HARDWARE';
   onModeChanged?: (mode: 'SIMULATION' | 'HARDWARE') => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenSimulator, systemMode = 'SIMULATION', onModeChanged }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenSimulator, onOpenAIChat, systemMode = 'SIMULATION', onModeChanged }) => {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const { isConnected } = useRealtime();
@@ -125,6 +127,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSimulator, systemMode = 'S
               )}
               <span>{currentMode === 'SIMULATION' ? 'SIMULATOR MODE' : 'HARDWARE MODE'}</span>
             </button>
+
+            {/* AI Assistant Chatbot Trigger */}
+            {onOpenAIChat && (
+              <button
+                onClick={onOpenAIChat}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#244B36] text-[#FAF8F1] hover:bg-[#1A3828] border border-[#244B36]/60 transition-all cursor-pointer shadow-xs"
+                title="Open SmartIrrigate AI Conversational Assistant"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span className="hidden sm:inline">AI Assistant</span>
+              </button>
+            )}
 
             {/* Test Simulator Controls Drawer Trigger */}
             <button

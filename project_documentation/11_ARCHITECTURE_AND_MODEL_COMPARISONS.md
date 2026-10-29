@@ -81,3 +81,4 @@ Candidate Models for Soil Moisture Forecasting:
 | **Linear Regression** | Moderate; captures general linear drydown trend | Extremely low | Fractions of a second | Very Low | Good initial baseline. |
 | **Random Forest Regressor** | **High**: Handles non-linear diurnal cycles and weather interactions | Low (~15MB RAM) | Fast (~5 seconds on Raspberry Pi CPU) | Low (Averaging over multiple trees reduces variance) | **Recommended choice for SmartIrrigate Phase 2**. Can execute directly on Raspberry Pi 4B. |
 | **LSTM / GRU Neural Network** | High only if dataset has > 100,000 samples across seasons | High (Requires GPU or heavy CPU) | Very Slow; requires tuning learning rate, epochs, hidden units | **Extreme**: Overfits rapidly on limited telemetry samples | **Unsuitable** for a student prototype with limited telemetry. Overengineered. |
+

@@ -1,16 +1,19 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Droplet, Sprout, Cpu, Settings } from 'lucide-react';
+import { LayoutDashboard, Droplet, Sprout, Cpu, Sparkles } from 'lucide-react';
 
-export const BottomNav: React.FC = () => {
+interface BottomNavProps {
+  onOpenAIChat?: () => void;
+}
+
+export const BottomNav: React.FC<BottomNavProps> = ({ onOpenAIChat }) => {
   const location = useLocation();
 
   const tabs = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/zones', label: 'Zones', icon: Sprout },
-    { to: '/irrigation', label: 'Irrigation', icon: Droplet },
+    { to: '/irrigation', label: 'Irrigate', icon: Droplet },
     { to: '/devices', label: 'Devices', icon: Cpu },
-    { to: '/settings', label: 'Settings', icon: Settings },
   ];
 
   return (
@@ -38,6 +41,19 @@ export const BottomNav: React.FC = () => {
             </Link>
           );
         })}
+
+        {/* Mobile AI Assistant Trigger */}
+        {onOpenAIChat && (
+          <button
+            onClick={onOpenAIChat}
+            className="flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all text-[#244B36] hover:text-[#1A3828] cursor-pointer"
+          >
+            <div className="p-1.5 rounded-xl bg-emerald-100 text-[#244B36] shadow-xs">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+            </div>
+            <span className="text-[10px] font-bold mt-1 text-emerald-900">AI Chat</span>
+          </button>
+        )}
       </div>
     </nav>
   );

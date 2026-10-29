@@ -311,3 +311,124 @@ export interface ZonePlanCalculation {
   }>;
 }
 
+// ==================== CLOUD AI INTELLIGENCE TYPES ====================
+
+export interface AIForecastPoint {
+  timestamp: string;
+  moisture_percent: number;
+  is_forecast: boolean;
+  confidence_min?: number | null;
+  confidence_max?: number | null;
+}
+
+export interface AIForecastResponse {
+  zone_id: string;
+  current_moisture: number;
+  forecast_30m?: number | null;
+  forecast_60m?: number | null;
+  confidence_interval_30m?: number[] | null;
+  confidence_interval_60m?: number[] | null;
+  trend_direction: 'DRYING' | 'STABLE' | 'RISING';
+  model_type: string;
+  model_version: string;
+  data_quality: string;
+  historical_samples_count: number;
+  generated_at: string;
+  warning_message?: string | null;
+  forecast_curve: AIForecastPoint[];
+}
+
+export interface AIAnomalyResponse {
+  id: number;
+  event_id: string;
+  zone_id?: string | null;
+  device_id?: string | null;
+  timestamp: string;
+  severity: 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+  category: 'SENSOR' | 'IRRIGATION' | 'COMMUNICATION';
+  anomaly_type: string;
+  observed_evidence: string;
+  explanation: string;
+  suggested_action?: string | null;
+  detection_method: string;
+  status: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
+  resolved_at?: string | null;
+  resolved_by?: string | null;
+}
+
+export interface AIRecommendationResponse {
+  id: number;
+  recommendation_id: string;
+  zone_id: string;
+  suggested_action: 'IRRIGATE' | 'WAIT' | 'INSPECT';
+  proposed_duration_seconds: number;
+  reason: string;
+  current_moisture: number;
+  target_moisture: number;
+  dry_threshold: number;
+  rain_detected: boolean;
+  forecast_30m?: number | null;
+  confidence: number;
+  rules_version: string;
+  generated_at: string;
+  expires_at: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'EXECUTED';
+  action_id?: number | null;
+  is_expired: boolean;
+}
+
+export interface WaterEfficiencyResponse {
+  zone_id: string;
+  period_days: number;
+  total_runtime_seconds: number;
+  cycle_count: number;
+  avg_moisture_gain: number;
+  water_consumed_liters_estimate?: number | null;
+  flow_rate_lpm: number;
+  efficiency_score: number;
+  inefficient_cycles_count: number;
+  rain_watering_cycles_count: number;
+  recommendations: string[];
+  daily_runtimes: Array<{
+    date: string;
+    runtime_seconds: number;
+    volume_liters: number;
+  }>;
+}
+
+export interface AIChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  supporting_records?: Record<string, any> | null;
+  proposed_action?: {
+    action_id: number;
+    description: string;
+    target_zone: string;
+    duration_seconds: number;
+    status: string;
+  } | null;
+  created_at: string;
+}
+
+export interface AIChatRequest {
+  message: string;
+  conversation_id?: string;
+  zone_id?: string;
+}
+
+export interface AIChatResponse {
+  conversation_id: string;
+  role: string;
+  content: string;
+  supporting_records?: Record<string, any> | null;
+  proposed_action?: {
+    action_id: number;
+    description: string;
+    target_zone: string;
+    duration_seconds: number;
+    status: string;
+  } | null;
+  created_at: string;
+}
+

@@ -188,3 +188,4 @@ SmartIrrigate/
 - **Edge Gateway Entry**: [`edge/raspberry_pi/edge_service.py`](file:///c:/Users/User/Desktop/SmartIrrigate/edge/raspberry_pi/edge_service.py) `__main__` loop.
 - **State Coordinator**: [`backend/app/services/state_manager.py`](file:///c:/Users/User/Desktop/SmartIrrigate/backend/app/services/state_manager.py).
 - **Core Business Logic**: [`backend/app/services/irrigation_engine.py`](file:///c:/Users/User/Desktop/SmartIrrigate/backend/app/services/irrigation_engine.py) and [`backend/app/api/zones.py`](file:///c:/Users/User/Desktop/SmartIrrigate/backend/app/api/zones.py).
+

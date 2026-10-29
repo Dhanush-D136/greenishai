@@ -254,3 +254,91 @@ class ZonePlant(Base):
     
     zone = relationship("IrrigationZone", back_populates="plants")
 
+class AIForecast(Base):
+    __tablename__ = "ai_forecasts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    zone_id = Column(String(100), index=True, nullable=False)
+    generated_at = Column(DateTime(timezone=True), default=utcnow)
+    horizon_minutes = Column(Integer, nullable=False) # 30 or 60
+    current_measured_moisture = Column(Float, nullable=False)
+    predicted_moisture = Column(Float, nullable=False)
+    confidence_min = Column(Float, nullable=False)
+    confidence_max = Column(Float, nullable=False)
+    trend_direction = Column(String(20), default="DRYING") # "DRYING", "STABLE", "RISING"
+    model_type = Column(String(50), default="TREND_BASELINE") # "TREND_BASELINE", "EXPONENTIAL_DECAY", "RANDOM_FOREST"
+    model_version = Column(String(50), default="v1.0.0-baseline")
+    data_quality = Column(String(50), default="OPTIMAL") # "OPTIMAL", "FAIR", "INSUFFICIENT_DATA", "STALE_WARNING"
+    historical_samples_count = Column(Integer, default=0)
+    is_simulated = Column(Boolean, default=False)
+
+class AIAnomaly(Base):
+    __tablename__ = "ai_anomalies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(String(64), unique=True, index=True, default=lambda: str(uuid.uuid4()))
+    zone_id = Column(String(100), index=True, nullable=True)
+    device_id = Column(String(100), index=True, nullable=True)
+    timestamp = Column(DateTime(timezone=True), default=utcnow)
+    severity = Column(String(20), default="WARNING") # "INFO", "WARNING", "ERROR", "CRITICAL"
+    category = Column(String(50), default="SENSOR") # "SENSOR", "IRRIGATION", "COMMUNICATION"
+    anomaly_type = Column(String(100), nullable=False) # "OUT_OF_RANGE", "FLATLINE", "IMPLAUSIBLE_JUMP", "UNRESPONSIVE_SOIL", "PHANTOM_WATERING", "RUNTIME_EXCEEDED", "DISCONNECTED"
+    observed_evidence = Column(String(500), nullable=False)
+    explanation = Column(Text, nullable=False)
+    suggested_action = Column(String(500), nullable=True)
+    detection_method = Column(String(50), default="DETERMINISTIC_RULE") # "DETERMINISTIC_RULE", "STATISTICAL"
+    status = Column(String(50), default="ACTIVE") # "ACTIVE", "ACKNOWLEDGED", "RESOLVED", "DISMISSED"
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+    resolved_by = Column(String(255), nullable=True)
+
+class AIRecommendation(Base):
+    __tablename__ = "ai_recommendations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    recommendation_id = Column(String(64), unique=True, index=True, default=lambda: str(uuid.uuid4()))
+    zone_id = Column(String(100), index=True, nullable=False)
+    suggested_action = Column(String(50), nullable=False) # "IRRIGATE", "WAIT", "INSPECT"
+    proposed_duration_seconds = Column(Integer, default=300)
+    reason = Column(Text, nullable=False)
+    current_moisture = Column(Float, nullable=False)
+    target_moisture = Column(Float, nullable=False)
+    dry_threshold = Column(Float, nullable=False)
+    rain_detected = Column(Boolean, default=False)
+    forecast_30m = Column(Float, nullable=True)
+    supporting_data_json = Column(Text, nullable=True)
+    confidence = Column(Float, default=0.85)
+    rules_version = Column(String(50), default="v1.2-agricultural")
+    generated_at = Column(DateTime(timezone=True), default=utcnow)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String(50), default="PENDING") # "PENDING", "APPROVED", "REJECTED", "EXPIRED", "EXECUTED"
+    action_id = Column(Integer, nullable=True) # Linked ProposedAction id
+
+class WaterEfficiencyMetric(Base):
+    __tablename__ = "water_efficiency_metrics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    zone_id = Column(String(100), index=True, nullable=False)
+    period_start = Column(DateTime(timezone=True), nullable=False)
+    period_end = Column(DateTime(timezone=True), default=utcnow)
+    total_runtime_seconds = Column(Integer, default=0)
+    cycle_count = Column(Integer, default=0)
+    avg_moisture_gain = Column(Float, default=0.0)
+    water_consumed_liters_estimate = Column(Float, nullable=True)
+    flow_rate_lpm = Column(Float, default=1.5) # Default 1.5 LPM calibrated submersible mini-pump
+    efficiency_score = Column(Float, default=85.0) # 0-100 score
+    inefficient_cycles_count = Column(Integer, default=0)
+    recommendations_json = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+class AIChatMessage(Base):
+    __tablename__ = "ai_chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(String(64), index=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    role = Column(String(20), nullable=False) # "user", "assistant"
+    content = Column(Text, nullable=False)
+    supporting_records_json = Column(Text, nullable=True)
+    proposed_action_id = Column(Integer, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+

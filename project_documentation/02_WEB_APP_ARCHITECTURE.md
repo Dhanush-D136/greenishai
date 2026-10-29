@@ -441,3 +441,4 @@ sequenceDiagram
     end
     UI->>Operator: Modal transitions to Stage 3 ("State Confirmed: Pumping")
 ```
+

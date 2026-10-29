@@ -132,3 +132,4 @@ graph TD
    Any predictive ML model must be benchmarked against the simple persistence baseline:
    $$\hat{y}_{t+h} = y_t$$
    Only deploy the ML model if its Root Mean Squared Error (RMSE) significantly improves over the baseline.
+

@@ -22,6 +22,7 @@ import {
 import { api } from '../services/api';
 import { IrrigationStatus, IrrigationSetting, IrrigationEvent, PermissionMode, SystemMode, PumpState } from '../types';
 import { useRealtime } from '../context/RealtimeContext';
+import { AIRecommendationsCard } from '../components/AIRecommendationsCard';
 
 interface IrrigationPageProps {
   onOpenPumpModal: () => void;
@@ -517,6 +518,13 @@ export const IrrigationPage: React.FC<IrrigationPageProps> = ({
 
         </div>
       </div>
+
+      {/* SECTION 2.5: CLOUD AI IRRIGATION RECOMMENDATIONS (APPROVAL REQUIRED) */}
+      <AIRecommendationsCard
+        zoneId="zone-01"
+        zoneName="Zone A — Vegetable Garden"
+        onActionComplete={loadData}
+      />
 
       {/* SECTION 3: RECENT IRRIGATION EVENTS & AUDIT LOG */}
       <div className="rounded-3xl glass-panel p-6 shadow-xl space-y-4">

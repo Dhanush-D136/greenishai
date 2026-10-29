@@ -8,6 +8,7 @@ import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { SimulatorDrawer } from './components/SimulatorDrawer';
 import { PumpControlModal } from './components/PumpControlModal';
+import { AIChatDrawer } from './components/AIChatDrawer';
 
 import { DashboardPage } from './pages/DashboardPage';
 import { DevicesPage } from './pages/DevicesPage';
@@ -45,6 +46,7 @@ const AppContent: React.FC = () => {
   
   const [isSimulatorOpen, setIsSimulatorOpen] = useState<boolean>(false);
   const [isPumpModalOpen, setIsPumpModalOpen] = useState<boolean>(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState<boolean>(false);
   const [systemMode, setSystemMode] = useState<'SIMULATION' | 'HARDWARE'>('SIMULATION');
   const [currentPumpState, setCurrentPumpState] = useState<'OFF' | 'STARTING' | 'RUNNING' | 'STOPPING' | 'FAULT' | 'UNKNOWN'>('OFF');
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
@@ -61,6 +63,7 @@ const AppContent: React.FC = () => {
       {!isLoginPage && (
         <Navbar 
           onOpenSimulator={() => setIsSimulatorOpen(true)}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
           systemMode={systemMode}
           onModeChanged={handleModeChanged}
         />
@@ -144,7 +147,15 @@ const AppContent: React.FC = () => {
       </main>
 
       {/* Mobile Portrait Bottom Navigation Bar - rendered on authenticated pages only */}
-      {!isLoginPage && <BottomNav />}
+      {!isLoginPage && <BottomNav onOpenAIChat={() => setIsAIChatOpen(true)} />}
+
+      {/* Global Cloud AI Conversational Assistant Drawer */}
+      <AIChatDrawer
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+        zoneId="zone-01"
+        onActionTriggered={() => setRefreshTrigger(prev => prev + 1)}
+      />
 
       {/* Global Interactive Hardware Simulator Drawer */}
       <SimulatorDrawer

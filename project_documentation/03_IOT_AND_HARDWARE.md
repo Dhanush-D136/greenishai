@@ -141,3 +141,4 @@ Layer 5: Sensor Failsafe Cutoff (Halts pump if sensor reading drops to < 0% or >
    Enforces a 30-minute rest period (`cooldown_minutes = 30`) after every watering cycle to allow water to percolate to root depth, avoiding false re-triggering.
 5. **Mode-Switch Disarm** ([`state_manager.py:63-66`](file:///c:/Users/User/Desktop/SmartIrrigate/backend/app/services/state_manager.py#L63-L66)):
    Switching operating modes (Simulation ➔ Hardware) or changing connection modes immediately stops any active pump before state transition.
+
