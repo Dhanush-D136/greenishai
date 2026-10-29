@@ -290,9 +290,9 @@ class AIService:
                             suggested_action="Check grounding of the ESP32 circuit and ensure sensor cable is shielded."
                         )
 
-            # Check 3: Sensor Flatline (> 10 identical readings)
-            if len(readings) >= 10 and val is not None:
-                all_same = all(r.soil_moisture_percent == val for r in readings[:10])
+            # Check 3: Sensor Flatline (> 15 identical readings)
+            if len(readings) >= 15 and val is not None:
+                all_same = all(r.soil_moisture_percent == val for r in readings[:15])
                 if all_same:
                     cls._record_anomaly(
                         db=db,
@@ -300,8 +300,8 @@ class AIService:
                         device_id=zone.controller_device_id,
                         severity="INFO",
                         category="SENSOR",
-                        anomaly_type="SENSOR_STUCK_READING",
-                        evidence=f"Sensor reported exactly {val:.1f}% identically across {min(len(readings), 15)} consecutive samples.",
+                        anomaly_type="FLATLINE",
+                        evidence=f"Sensor reported exactly {val:.1f}% identically across 15 consecutive samples.",
                         explanation="Soil moisture naturally fluctuates slightly with temperature. A completely frozen integer indicates ADC lockup.",
                         suggested_action="Gently touch sensor or inject test water to verify dynamic analog response."
                     )
@@ -656,10 +656,11 @@ class AIService:
         duration = rec.proposed_duration_seconds or 300
         reason = f"Operator approved AI recommendation: {rec.reason}"
 
+        approver = user_email or operator_name
         actuation_result = state_manager.start_irrigation(
             duration_seconds=duration,
             reason=reason,
-            user_email=user_email or "operator"
+            user_email=approver
         )
 
         # Mark recommendation approved and executed
@@ -671,7 +672,6 @@ class AIService:
         zone.last_irrigated_at = now
         db.commit()
 
-        approver = user_email or operator_name
         logger.info(f"Operator '{approver}' approved AI recommendation for zone {rec.zone_id}. Actuation dispatched.")
         return {
             "status": "APPROVED",
@@ -1036,3 +1036,4 @@ class AIService:
 
 
 ai_service = AIService()
+

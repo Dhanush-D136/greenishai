@@ -64,19 +64,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSimulator, onOpenAIChat, s
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FAF8F1]/90 backdrop-blur-md border-b border-[#A9BBA0]/30 transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+    <header className="sticky top-0 z-40 bg-[#FAF8F1]/95 backdrop-blur-md border-b border-[#A9BBA0]/30 transition-all pt-[max(env(safe-area-inset-top),0.5rem)]">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 sm:h-20">
           
           {/* Logo & Brand */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[#244B36] flex items-center justify-center text-[#FAF8F1] shadow-md group-hover:scale-105 transition-transform">
-              <Sprout className="w-6 h-6 text-[#A9BBA0]" />
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#244B36] flex items-center justify-center text-[#FAF8F1] shadow-md group-hover:scale-105 transition-transform">
+              <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-[#A9BBA0]" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-2xl tracking-tight text-[#244B36] font-['Outfit']">greenish</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[#E7EFE4] text-[#244B36] font-semibold border border-[#A9BBA0]/40">vel</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-[#244B36] font-['Outfit']">greenish</span>
+                <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-[#E7EFE4] text-[#244B36] font-semibold border border-[#A9BBA0]/40">vel</span>
               </div>
               <p className="text-[10px] tracking-wider text-[#778078] uppercase font-medium hidden sm:block">Sense. Decide. Irrigate.</p>
             </div>
@@ -105,13 +105,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSimulator, onOpenAIChat, s
           </nav>
 
           {/* Right Action Bar */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             
             {/* Primary Mode Selector: SIMULATOR vs HARDWARE */}
             <button
               onClick={handleToggleMode}
               disabled={isSwitching}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-xs ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-xs ${
                 currentMode === 'SIMULATION'
                   ? 'bg-amber-500/15 text-amber-900 border-amber-400/50 hover:bg-amber-500/25'
                   : 'bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700'
@@ -125,14 +125,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSimulator, onOpenAIChat, s
               ) : (
                 <HardDrive className="w-3.5 h-3.5 text-emerald-200" />
               )}
-              <span>{currentMode === 'SIMULATION' ? 'SIMULATOR MODE' : 'HARDWARE MODE'}</span>
+              <span className="hidden sm:inline">{currentMode === 'SIMULATION' ? 'SIMULATOR MODE' : 'HARDWARE MODE'}</span>
+              <span className="sm:hidden text-[11px]">{currentMode === 'SIMULATION' ? 'SIM' : 'HW'}</span>
             </button>
 
-            {/* AI Assistant Chatbot Trigger */}
+            {/* AI Assistant Chatbot Trigger (Desktop/Tablet) */}
             {onOpenAIChat && (
               <button
                 onClick={onOpenAIChat}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#244B36] text-[#FAF8F1] hover:bg-[#1A3828] border border-[#244B36]/60 transition-all cursor-pointer shadow-xs"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#244B36] text-[#FAF8F1] hover:bg-[#1A3828] border border-[#244B36]/60 transition-all cursor-pointer shadow-xs"
                 title="Open SmartIrrigate AI Conversational Assistant"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
@@ -140,10 +141,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSimulator, onOpenAIChat, s
               </button>
             )}
 
-            {/* Test Simulator Controls Drawer Trigger */}
+            {/* Test Simulator Controls Drawer Trigger (Desktop/Tablet) */}
             <button
               onClick={onOpenSimulator}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-[#FAF8F1] text-[#778078] hover:text-[#244B36] border border-[#A9BBA0]/40 hover:bg-[#F2EBDD] transition-colors shadow-xs"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-[#FAF8F1] text-[#778078] hover:text-[#244B36] border border-[#A9BBA0]/40 hover:bg-[#F2EBDD] transition-colors shadow-xs"
               title="Open Simulation Controls Panel"
             >
               <FlaskConical className="w-3.5 h-3.5 text-[#C58A32]" />
@@ -161,22 +162,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSimulator, onOpenAIChat, s
 
             {/* User Profile / Auth Button */}
             {isAuthenticated ? (
-              <div className="flex items-center gap-2 pl-2 border-l border-[#A9BBA0]/30">
-                <div className="w-8 h-8 rounded-full bg-[#244B36] text-[#FAF8F1] flex items-center justify-center font-bold text-xs shadow-sm">
+              <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-[#A9BBA0]/30">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#244B36] text-[#FAF8F1] flex items-center justify-center font-bold text-xs shadow-sm">
                   {user?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
                 </div>
                 <button
                   onClick={logout}
                   title="Sign Out"
-                  className="p-1.5 rounded-lg text-[#778078] hover:text-[#B84B43] hover:bg-[#E7EFE4] transition-colors"
+                  className="p-1 sm:p-1.5 rounded-lg text-[#778078] hover:text-[#B84B43] hover:bg-[#E7EFE4] transition-colors cursor-pointer"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             ) : (
               <Link
                 to="/login"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#244B36] text-[#FAF8F1] hover:bg-[#1a3828] transition-colors shadow-sm"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#244B36] text-[#FAF8F1] hover:bg-[#1a3828] transition-colors shadow-sm"
               >
                 <UserIcon className="w-3.5 h-3.5" />
                 <span>Sign In</span>

@@ -273,3 +273,4 @@ export const AIRecommendationsCard: React.FC<AIRecommendationsCardProps> = ({
     </div>
   );
 };
+

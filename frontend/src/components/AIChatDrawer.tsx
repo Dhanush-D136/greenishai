@@ -308,3 +308,4 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
     </div>
   );
 };
+

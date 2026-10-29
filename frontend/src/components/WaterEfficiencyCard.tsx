@@ -215,3 +215,4 @@ export const WaterEfficiencyCard: React.FC<WaterEfficiencyCardProps> = ({
     </div>
   );
 };
+

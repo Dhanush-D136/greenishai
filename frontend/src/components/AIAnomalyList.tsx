@@ -275,3 +275,4 @@ export const AIAnomalyList: React.FC<AIAnomalyListProps> = ({ zoneId, limit = 20
     </div>
   );
 };
+
