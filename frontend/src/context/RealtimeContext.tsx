@@ -19,8 +19,16 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let reconnectTimeout: any = null;
 
     function connect() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws/live`;
+      const backendUrl = import.meta.env.VITE_API_URL;
+      let wsUrl = '';
+      if (backendUrl) {
+        const wsProto = backendUrl.startsWith('https') ? 'wss:' : 'ws:';
+        const cleanHost = backendUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/$/, '');
+        wsUrl = `${wsProto}//${cleanHost}/ws/live`;
+      } else {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        wsUrl = `${protocol}//${window.location.host}/ws/live`;
+      }
       
       try {
         ws = new WebSocket(wsUrl);

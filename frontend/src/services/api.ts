@@ -19,7 +19,8 @@ import type {
   ZonePlanCalculation
 } from '../types';
 
-const API_BASE = '/api';
+const rawBase = import.meta.env.VITE_API_URL || '';
+const API_BASE = rawBase ? `${rawBase.replace(/\/$/, '')}/api` : '/api';
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem('smartirrigate_token');
